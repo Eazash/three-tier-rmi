@@ -1,21 +1,72 @@
 package client;
-import database.DatabaseHandlerImpl;
-import database.DatabaseHandlerInterface;
 
+import server.NotesInterface;
+
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
+import java.util.Scanner;
 
 public class Client {
+    private static NotesInterface notes;
+    private static int user_id;
     public static void main(String[] args) {
         String name= "database";
         try {
             Registry registry = LocateRegistry.getRegistry(1099);
-            System.out.println(Arrays.stream(registry.list()).reduce("", (acc, el)-> acc + el + "\n"));
+            notes = (NotesInterface) registry.lookup("notes");
+//            System.out.println(Arrays.stream(registry.list()).reduce("", (acc, el)-> acc + el + "\n"));
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            System.err.println("Notes class not bound with name: 'notes'");
+            e.printStackTrace();
+            System.exit(1);
+        }
+        //Read Username and password
+        System.out.println("Enter email and password");
+        Scanner s = new Scanner(System.in);
+        System.out.print("email ");
+        String email = s.nextLine();
+        System.out.print("Password ");
+        String password = s.nextLine();
+
+        try {
+            user_id = notes.login(email, password);
+            System.out.println(user_id);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-        System.exit(0);
+        int choice;
+        do{
+            System.out.println("-------------------------------------------------");
+            System.out.println("1: Add note\n2: View Notes\n0: Exit program");
+            choice = s.nextInt();
+            switch (choice){
+                case 1 : {
+                    // Add a new note
+                    System.out.println("Enter note content");
+                    s.next();
+                    String note = s.nextLine();
+                    System.out.println(note);
+                    //notes.add(user_id, note);
+                    break;
+                }
+                case 2: {
+                    // Fetch all notes and display
+                    //notes.getAll(user_id);
+                }
+                case 0: {
+                    System.out.println("Goodbye!");
+                    break;
+                }
+                default: {
+                    choice=-1;
+                    break;
+                }
+            }
+        }while (choice!=0);
+
     }
 }
