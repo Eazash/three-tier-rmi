@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Vector;
 
 public class DatabaseHandlerImpl implements DatabaseHandlerInterface{
     //implementations for remote database functions
@@ -54,4 +55,36 @@ public class DatabaseHandlerImpl implements DatabaseHandlerInterface{
         }
         return 0;
     }
+
+    @Override
+    public void insertNote(int user_id, String noteContent) throws RemoteException {
+        String sql = "INSERT INTO `notes` (`user_id`, `content`) VALUES (?, ?)";
+        try {
+            PreparedStatement insertNoteStatement = connection.prepareStatement(sql);
+            insertNoteStatement.setInt(1, user_id);
+            insertNoteStatement.setString(2, noteContent);
+            insertNoteStatement.executeUpdate();
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    @Override
+    public String[] getAllNotes(int user_id) throws RemoteException {
+        String sql = "SELECT `content` FROM `notes` WHERE `user_id`=?";
+        try {
+            PreparedStatement getAllNotesStatement = connection.prepareStatement(sql);
+            getAllNotesStatement.setInt(1, user_id);
+            ResultSet rs = getAllNotesStatement.executeQuery();
+            Vector<String> notes = new Vector<>();
+            while (rs.next()){
+                notes.add(rs.getString(1));
+            }
+            return notes.toArray(new String[notes.size()]);
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+        return new String[0];
+    }
+
 }
