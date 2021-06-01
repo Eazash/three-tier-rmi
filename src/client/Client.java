@@ -11,8 +11,9 @@ import java.util.Scanner;
 public class Client {
     private static NotesInterface notes;
     private static int user_id;
+
     public static void main(String[] args) {
-        String name= "database";
+        String name = "database";
         try {
             Registry registry = LocateRegistry.getRegistry(1099);
             notes = (NotesInterface) registry.lookup("notes");
@@ -39,34 +40,42 @@ public class Client {
             e.printStackTrace();
         }
         int choice;
-        do{
+        do {
             System.out.println("-------------------------------------------------");
             System.out.println("1: Add note\n2: View Notes\n0: Exit program");
-            choice = s.nextInt();
-            switch (choice){
-                case 1 : {
+            choice = Integer.parseInt(s.nextLine());
+            switch (choice) {
+                case 1: {
                     // Add a new note
                     System.out.println("Enter note content");
-                    s.next();
                     String note = s.nextLine();
                     System.out.println(note);
-                    //notes.add(user_id, note);
+                    try {
+                        notes.addNote(user_id, note);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 }
                 case 2: {
                     // Fetch all notes and display
-                    //notes.getAll(user_id);
+                    try {
+                        System.out.println(notes.getAllNotes(user_id));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 }
                 case 0: {
                     System.out.println("Goodbye!");
                     break;
                 }
                 default: {
-                    choice=-1;
+                    choice = -1;
                     break;
                 }
             }
-        }while (choice!=0);
+        } while (choice != 0);
 
     }
 }
