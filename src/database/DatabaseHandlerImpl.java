@@ -16,12 +16,12 @@ public class DatabaseHandlerImpl implements DatabaseHandlerInterface{
     @Override
     public int isUser(String email, String password) throws RemoteException {
         // TODO check password agianst hash (using salt) instead of direct string comp
-        String queryUsersql = "SELECT `user_id` `password` FROM `users` where email=?";
+        String queryUsersql = "SELECT `user_id`, `password` FROM `users` where email=?";
         try {
             PreparedStatement queryUserPS = connection.prepareStatement(queryUsersql);
             queryUserPS.setString(1, email);
             ResultSet rs = queryUserPS.executeQuery();
-            if(rs.next()){
+            if(!rs.next()){
                 // user with provided email not found
                 // TODO throw errors instead of 0
                 return 0;
