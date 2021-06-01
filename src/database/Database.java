@@ -17,19 +17,19 @@ public class Database {
             System.err.println("Unable to load Driver Class");
             System.exit(1);
         }
-        try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost/notes_rmi", "rmidbserver" , "password");
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
-            System.exit(1);
-        }
     }
 
     public static Connection getConn() {
         return conn;
     }
     public static void main(String []args){
-        //initialize
+        //initialize connection
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/notes_rmi", "rmidbserver" , "password");
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+            System.exit(1);
+        }
 
         DatabaseHandlerImpl impl = new DatabaseHandlerImpl(getConn());
         try {
