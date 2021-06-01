@@ -1,11 +1,16 @@
 package database;
 
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
     private Connection conn;
+    private static Registry registry;
     public Database(){
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -24,7 +29,17 @@ public class Database {
     public Connection getConn() {
         return conn;
     }
-    public void main(){
+    public static void main(String []args){
         //initialize
+
+        DatabaseHandlerImpl impl = new DatabaseHandlerImpl();
+        try {
+            DatabaseHandlerInterface stub = (DatabaseHandlerInterface) UnicastRemoteObject.exportObject(impl, 0);
+            registry = LocateRegistry.createRegistry(2000);
+            registry.rebind("database", stub);
+        } catch (Exception e) {
+            System.err.println("Unable to bind impl to rmi registry");
+            e.printStackTrace();
+        }
     }
 }
