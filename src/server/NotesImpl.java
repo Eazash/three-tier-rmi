@@ -4,11 +4,13 @@ import database.DatabaseHandlerInterface;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 import java.util.Arrays;
 
-public class NotesImpl implements NotesInterface{
+public class NotesImpl implements NotesInterface {
     //function definitions for remote functions for working with notes
     private DatabaseHandlerInterface db;
+
     public NotesImpl() {
         try {
             db = (DatabaseHandlerInterface) Server.registry.lookup("database");
@@ -19,14 +21,21 @@ public class NotesImpl implements NotesInterface{
             e.printStackTrace();
         }
     }
-    @Override
-    public int login(String email, String password) {
 
-        int userID = 0;
+    @Override
+    public int login(String email, String password) throws RemoteException {
+
+        int userID ;
         try {
-            userID = db.isUser(email, password);
-        } catch (RemoteException e) {
+            String[] user = db.getUser(email);
+            if (user.length == 0 || !user[2].equals(password)) {
+                throw new RemoteException("Invalid Credentials");
+            } else {
+                userID = Integer.parseInt(user[0]);
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
+            throw new RemoteException("Unable to login");
         }
         return userID;
     }
@@ -41,6 +50,7 @@ public class NotesImpl implements NotesInterface{
         }
         return userId;
     }
+
     public void addNote(int user_id, String noteContent) {
         try {
             db.insertNote(user_id, noteContent);
@@ -48,13 +58,35 @@ public class NotesImpl implements NotesInterface{
             e.printStackTrace();
         }
     }
-    public String getAllNotes(int user_id){
+
+    public String getAllNotes(int user_id) {
+        String output = "";
         try {
-            String [] notes = db.getAllNotes(user_id);
-            return Arrays.stream(notes).reduce("", (acc, note)-> acc + "- " + note + "\n" );
-        } catch (RemoteException e){
+            String[][] notes = db.getAllNotes(user_id);
+            for (String[] note : notes) {
+                output += String.format("%d - %s\n", Integer.parseInt(note[0]), note[1]);
+            }
+        } catch (RemoteException e) {
             e.printStackTrace();
         }
-        return "";
+        return output;
+    }
+
+    @Override
+    public void deleteNote(int user_id, int id) throws RemoteException {
+        try {
+            db.delete(user_id, id);
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
+    }
+
+    @Override
+    public void clearNotes(int user_id) throws RemoteException {
+        try {
+            db.clearNotes(user_id);
+        } catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
     }
 }

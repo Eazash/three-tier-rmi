@@ -10,4 +10,8 @@ public interface NotesInterface extends Remote {
 
     void addNote(int user_id, String note) throws RemoteException;
     String getAllNotes(int user_id) throws RemoteException;
+
+    void deleteNote(int user_id, int id) throws RemoteException;
+
+    void clearNotes(int user_id) throws RemoteException;
 }
