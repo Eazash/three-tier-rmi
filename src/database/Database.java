@@ -35,7 +35,9 @@ public class Database {
         try {
             DatabaseHandlerInterface stub = (DatabaseHandlerInterface) UnicastRemoteObject.exportObject(impl, 0);
             Registry registry = LocateRegistry.createRegistry(1099);
+            System.out.println("Registry Created");
             registry.rebind("database", stub);
+            System.out.println("Database Stub bound");
         } catch (Exception e) {
             System.err.println("Unable to bind impl to rmi registry");
             e.printStackTrace();
