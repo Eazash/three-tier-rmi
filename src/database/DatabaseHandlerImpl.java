@@ -1,43 +1,33 @@
 package database;
 
 import java.rmi.RemoteException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Vector;
 
-public class DatabaseHandlerImpl implements DatabaseHandlerInterface{
+public class DatabaseHandlerImpl implements DatabaseHandlerInterface {
     //implementations for remote database functions
     private final Connection connection;
+
     public DatabaseHandlerImpl(Connection conn) {
         this.connection = conn;
     }
 
     @Override
-    public int isUser(String email, String password) throws RemoteException {
+    public String[] getUser(String email) throws RemoteException, SQLException {
         // TODO check password agianst hash (using salt) instead of direct string comp
-        String queryUsersql = "SELECT `user_id`, `password` FROM `users` where email=?";
-        try {
+        String queryUsersql = "SELECT * FROM `users` where email=?";
             PreparedStatement queryUserPS = connection.prepareStatement(queryUsersql);
             queryUserPS.setString(1, email);
             ResultSet rs = queryUserPS.executeQuery();
-            if(!rs.next()){
+            if (!rs.next()) {
                 // user with provided email not found
                 // TODO throw errors instead of 0
-                return 0;
+                return new String[]{};
             }
-            String storedPassword = rs.getString(2);
-            // incorrect password
-            if(storedPassword.equals(password)){
-                return rs.getInt(1);
-            }
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
-        }
-        return 0;
+            return new String[]{rs.getString(1), rs.getString(2), rs.getString(4)};
     }
-    public int createUser(String username, String email, String password) throws RemoteException{
+
+    public int createUser(String username, String email, String password) throws RemoteException {
         // TODO make password more secure with salting and sha2 encryption
         String createUsersql = "INSERT INTO `users` (`username`, `email`, `password`) VALUES (?, ? , ?)";
         try {
@@ -70,21 +60,39 @@ public class DatabaseHandlerImpl implements DatabaseHandlerInterface{
     }
 
     @Override
-    public String[] getAllNotes(int user_id) throws RemoteException {
-        String sql = "SELECT `content` FROM `notes` WHERE `user_id`=?";
+    public String[][] getAllNotes(int user_id) throws RemoteException {
+        String sql = "SELECT * FROM `notes` WHERE `user_id`=?";
         try {
             PreparedStatement getAllNotesStatement = connection.prepareStatement(sql);
             getAllNotesStatement.setInt(1, user_id);
             ResultSet rs = getAllNotesStatement.executeQuery();
-            Vector<String> notes = new Vector<>();
-            while (rs.next()){
-                notes.add(rs.getString(1));
+            Vector<String[]> notes = new Vector<>();
+            while (rs.next()) {
+                notes.add(new String[]{rs.getString(1), rs.getString(2)});
             }
-            return notes.toArray(new String[notes.size()]);
+            return notes.toArray(new String[notes.size()][]);
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
-        return new String[0];
+        return new String[][]{};
     }
+
+    @Override
+    public void delete(int user_id, int note_id) throws RemoteException, SQLException {
+        String sql = "DELETE FROM `notes` where `user_id`=? and `note_id`=?";
+
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1, user_id);
+        ps.setInt(2, note_id);
+        ps.executeUpdate();
+    }
+
+    @Override
+    public void clearNotes(int user_id) throws RemoteException, SQLException {
+        String sql = "DELETE FROM `notes`";
+        Statement st = connection.createStatement();
+        st.executeUpdate(sql);
+    }
+
 
 }
